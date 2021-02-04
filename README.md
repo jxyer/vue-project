@@ -8,6 +8,7 @@
 - vuex
 - element-ui
 - axios
+- tinymce
 ## 后端
 - SpringBoot
 
