@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxy.blog.mapper.ArticleCategoryMapper">
+
+    <resultMap type="ArticleCategory" id="ArticleCategoryResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="remark" column="remark"/>
+        <result property="image" column="image"/>
+    </resultMap>
+
+    <sql id="selectArticleCategoryVo">
+        select id, name, remark, image from article_category
+    </sql>
+
+
+    <select id="selectArticleCategoryList" parameterType="ArticleCategory" resultMap="ArticleCategoryResult">
+        <include refid="selectArticleCategoryVo"/>
+        <where>
+            <if test="id != null ">and id = #{id}</if>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectArticleCategoryById" parameterType="Long" resultMap="ArticleCategoryResult">
+        <include refid="selectArticleCategoryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertArticleCategory" parameterType="ArticleCategory">
+        insert into article_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="remark != null">remark,</if>
+            <if test="image != null">image,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="image != null">#{image},</if>
+        </trim>
+    </insert>
+
+    <update id="updateArticleCategory" parameterType="ArticleCategory">
+        update article_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="image != null">image = #{image},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteArticleCategoryById" parameterType="Long">
+        delete from article_category where id = #{id}
+    </delete>
+
+    <delete id="deleteArticleCategoryByIds" parameterType="String">
+        delete from article_category where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxy.blog.mapper.ArticleTypeMapper">
+    
+    <resultMap type="ArticleType" id="ArticleTypeResult">
+        <result property="id"    column="id"    />
+        <result property="typename"    column="typename"    />
+        <result property="articleid"    column="articleId"    />
+        <result property="image"    column="image"    />
+    </resultMap>
+
+    <sql id="selectArticleTypeVo">
+        select id, typename, articleId,image from article_type
+    </sql>
+
+    <select id="getHotLabel" parameterType="ArticleType" resultMap="ArticleTypeResult">
+        select id,typename,count(*) as a from article_type GROUP BY typename ORDER BY a desc
+        <if test="num != null">LIMIT #{id}</if> ;
+    </select>
+
+    <select id="selectArticleByName" parameterType="java.lang.String" resultMap="ArticleTypeResult">
+        select * from article_type where typename=#{typename}
+    </select>
+
+    <select id="selectArticleTypeByName" parameterType="java.lang.String" resultMap="ArticleTypeResult">
+        select * from article_type where typename=#{typename} and image is not NULL
+    </select>
+
+    <select id="selectArticleTypeAndNum" resultType="java.util.HashMap">
+        select *,count(*) as a from article_type GROUP BY typename ORDER BY a desc;
+    </select>
+
+    <select id="selectArticleTypeName" resultMap="ArticleTypeResult">
+        select * from article_type GROUP BY(typename)
+    </select>
+
+
+    <select id="selectArticleTypeList" parameterType="ArticleType" resultMap="ArticleTypeResult">
+        <include refid="selectArticleTypeVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+            <if test="typename != null  and typename != ''"> and typename like concat('%', #{typename}, '%')</if>
+            <if test="articleid != null "> and articleId = #{articleid}</if>
+        </where>
+    </select>
+    
+    <select id="selectArticleTypeById" parameterType="Long" resultMap="ArticleTypeResult">
+        <include refid="selectArticleTypeVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertArticleType" parameterType="ArticleType">
+        insert into article_type
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="typename != null">typename,</if>
+            <if test="articleid != null">articleId,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="typename != null">#{typename},</if>
+            <if test="articleid != null">#{articleid},</if>
+         </trim>
+    </insert>
+
+    <update id="updateArticleType" parameterType="ArticleType">
+        update article_type
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="typename != null">typename = #{typename},</if>
+            <if test="articleid != null">articleId = #{articleid},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteArticleTypeById" parameterType="Long">
+        delete from article_type where id = #{id}
+    </delete>
+
+    <delete id="deleteArticleTypeByIds" parameterType="String">
+        delete from article_type where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

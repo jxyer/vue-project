@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxy.blog.mapper.UserCommentMapper">
+    
+    <resultMap type="UserComment" id="UserCommentResult">
+        <result property="id"    column="id"    />
+        <result property="content"    column="content"    />
+        <result property="createtime"    column="createTime"    />
+        <result property="articleid"    column="articleId"    />
+        <result property="userid"    column="userId"    />
+        <result property="touserid"    column="toUserId"    />
+        <result property="parentid"    column="parentId"    />
+        <association property="user" column="userid" javaType="User">
+            <result property="id" column="userid"/>
+            <result property="name" column="name"/>
+            <result property="password" column="password"/>
+            <result property="createtime" column="createTime" />
+            <result property="deleted" column="deleted"/>
+            <result property="lasttime" column="lastTime"/>
+            <result property="phone" column="phone"/>
+        </association>
+    </resultMap>
+
+
+
+
+    <sql id="selectUserCommentVo">
+        select id, content, createTime, articleId, userId, toUserId, parentId from user_comment
+    </sql>
+
+    <select id="selectUserCommentList" parameterType="UserComment" resultMap="UserCommentResult">
+        <include refid="selectUserCommentVo"/>
+        <where>  
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="createtime != null "> and createTime = #{createtime}</if>
+            <if test="articleid != null "> and articleId = #{articleid}</if>
+            <if test="userid != null "> and userId = #{userid}</if>
+            <if test="touserid != null "> and toUserId = #{touserid}</if>
+            <if test="parentid != null "> and parentId = #{parentid}</if>
+        </where>
+    </select>
+
+    <select id="selectUserCommentListByArticleId" parameterType="Long" resultMap="UserCommentResult">
+                select user_comment.id, user_comment.content, user_comment.createTime, user_comment.articleId, user_comment.userId,user_comment.toUserId, user_comment.parentId,user.id as userid,user.name
+				from user_comment
+				INNER JOIN user on
+				articleId = #{articleId} and user.id=user_comment.userId
+    </select>
+    
+    <select id="selectUserCommentById" parameterType="Long" resultMap="UserCommentResult">
+        <include refid="selectUserCommentVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertUserComment" parameterType="UserComment" useGeneratedKeys="true" keyProperty="id">
+        insert into user_comment
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="content != null">content,</if>
+            <if test="createtime != null">createTime,</if>
+            <if test="articleid != null">articleId,</if>
+            <if test="userid != null">userId,</if>
+            <if test="touserid != null">toUserId,</if>
+            <if test="parentid != null">parentId,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="content != null">#{content},</if>
+            <if test="createtime != null">#{createtime},</if>
+            <if test="articleid != null">#{articleid},</if>
+            <if test="userid != null">#{userid},</if>
+            <if test="touserid != null">#{touserid},</if>
+            <if test="parentid != null">#{parentid},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUserComment" parameterType="UserComment">
+        update user_comment
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="content != null">content = #{content},</if>
+            <if test="createtime != null">createTime = #{createtime},</if>
+            <if test="articleid != null">articleId = #{articleid},</if>
+            <if test="userid != null">userId = #{userid},</if>
+            <if test="touserid != null">toUserId = #{touserid},</if>
+            <if test="parentid != null">parentId = #{parentid},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserCommentById" parameterType="Long">
+        delete from user_comment where id = #{id}
+    </delete>
+
+    <delete id="deleteUserCommentByIds" parameterType="String">
+        delete from user_comment where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

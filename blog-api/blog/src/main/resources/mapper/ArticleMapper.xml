@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jxy.blog.mapper.ArticleMapper">
+    
+    <resultMap type="Article" id="ArticleResult">
+        <result property="id"    column="id"    />
+        <result property="title"    column="title"    />
+        <result property="createtime"    column="createTime"    />
+        <result property="updatetime"    column="updateTime"    />
+        <result property="userid"    column="userId"    />
+        <result property="summary"    column="summary"    />
+        <result property="viewcount"    column="viewCount"    />
+        <result property="content"    column="content"    />
+        <result property="categoryid"    column="categoryId"    />
+    </resultMap>
+
+    <resultMap id="ArticleArticleTypeResult" type="Article" extends="ArticleResult">
+        <collection property="articleTypeList" notNullColumn="id" javaType="java.util.List" resultMap="ArticleTypeResult" />
+        <collection property="userComments" notNullColumn="id" javaType="java.util.List" resultMap="UserCommentResult" />
+    </resultMap>
+
+    <resultMap type="ArticleType" id="ArticleTypeResult">
+        <result property="id"    column="labelId"    />
+        <result property="typename"    column="typename"    />
+        <result property="articleid"    column="articleId"    />
+    </resultMap>
+
+    <resultMap type="UserComment" id="UserCommentResult">
+        <result property="id"    column="id"    />
+        <result property="content"    column="content"    />
+        <result property="createtime"    column="createTime"    />
+        <result property="articleid"    column="articleId"    />
+        <result property="userid"    column="userId"    />
+        <result property="touserid"    column="toUserId"    />
+        <result property="parentid"    column="parentId"    />
+    </resultMap>
+
+
+    <sql id="selectArticleVo">
+        select id, title, createTime, updateTime, userId, summary, viewCount, content, categoryId from article
+    </sql>
+    <select id="selectArticleByPage" parameterType="Page" resultMap="ArticleResult">
+        select * from article limit #{page},#{num}
+    </select>
+
+
+    <select id="selectArticleCategoryAll" resultType="java.util.HashMap">
+        select count(categoryId) as a,categoryId from article GROUP BY categoryId ORDER BY categoryId desc
+    </select>
+
+    <select id="getHotArticle" parameterType="Page" resultMap="ArticleResult">
+        select * from article ORDER BY viewCount DESC limit 5
+    </select>
+
+    <select id="selectArticleList" parameterType="Article" resultMap="ArticleResult">
+        <include refid="selectArticleVo"/>
+        <where>  
+            <if test="id != null "> and id = #{id}</if>
+            <if test="title != null  and title != ''"> and title = #{title}</if>
+            <if test="userid != null "> and userId = #{userid}</if>
+            <if test="categoryid != null "> and categoryId = #{categoryid}</if>
+        </where>
+    </select>
+    
+    <select id="selectArticleById" parameterType="Long" resultMap="ArticleArticleTypeResult">
+        select a.id, a.title, a.createTime, a.updateTime, a.userId, a.summary, a.viewCount, a.content, a.categoryId,
+            b.id as labelId, b.typename, b.articleId,c.id,c.articleId,c.content,c.createTime,c.userId,c.toUserId
+        from article a
+        left join article_type b on b.articleId = a.id
+		LEFT JOIN user_comment c on c.articleId = a.id
+        where a.id = #{id}
+    </select>
+        
+    <insert id="insertArticle" parameterType="Article">
+        insert into article
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="createtime != null">createTime,</if>
+            <if test="updatetime != null">updateTime,</if>
+            <if test="userid != null">userId,</if>
+            <if test="summary != null">summary,</if>
+            <if test="viewcount != null">viewCount,</if>
+            <if test="content != null and content != ''">content,</if>
+            <if test="categoryid != null">categoryId,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="createtime != null">#{createtime},</if>
+            <if test="updatetime != null">#{updatetime},</if>
+            <if test="userid != null">#{userid},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="viewcount != null">#{viewcount},</if>
+            <if test="content != null and content != ''">#{content},</if>
+            <if test="categoryid != null">#{categoryid},</if>
+         </trim>
+    </insert>
+
+    <update id="updateArticle" parameterType="Article">
+        update article
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="createtime != null">createTime = #{createtime},</if>
+            <if test="updatetime != null">updateTime = #{updatetime},</if>
+            <if test="userid != null">userId = #{userid},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="viewcount != null">viewCount = #{viewcount},</if>
+            <if test="content != null and content != ''">content = #{content},</if>
+            <if test="categoryid != null">categoryId = #{categoryid},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteArticleById" parameterType="Long">
+        delete from article where id = #{id}
+    </delete>
+
+    <delete id="deleteArticleByIds" parameterType="String">
+        delete from article where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteArticleTypeByArticleIds" parameterType="String">
+        delete from article_type where articleId in 
+        <foreach item="articleId" collection="array" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteArticleTypeByArticleId" parameterType="Long">
+        delete from article_type where articleId = #{articleId}
+    </delete>
+
+    <insert id="batchArticleType">
+        insert into article_type( id, typename, articleId) values
+		<foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.id}, #{item.typename}, #{item.articleid})
+        </foreach>
+    </insert>
+</mapper>
